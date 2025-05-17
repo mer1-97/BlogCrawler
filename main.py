@@ -12,6 +12,9 @@ from bs4 import BeautifulSoup
 import pandas as pd
 from datetime import datetime
 import os
+from src.crawler import NaverBlogCrawler
+from src.parser import NaverBlogParser
+from src.utils import export_to_csv, print_result
 
 def setup_driver():
     """Selenium WebDriver 설정"""
@@ -212,50 +215,41 @@ def main():
     
     print("블로그 정보 수집을 시작합니다...")
     
+    # 크롤러 초기화
+    crawler = NaverBlogCrawler()
+    if not crawler.setup_driver():
+        print("크롤러 초기화 실패")
+        return
+    
     # 결과를 저장할 리스트
     results = []
     
-    # 각 URL 처리
-    for url in urls:
-        result = get_blog_info(url)
-        if result:
-            print("\n=== 분석 결과 ===")
-            print(f"URL: {result['URL']}")
-            print(f"작성일: {result['PublishDate']}")
-            print(f"해시태그 수: {result['HashtagCount']}")
-            print(f"이미지 수: {result['ImageCount']}")
-            print(f"스티커 수: {result['StickerCount']}")
-            print(f"댓글 수: {result['CommentCount']}")
-            print(f"공감 수: {result['LikeCount']}")
-            print(f"지도 정보 수: {result['MapCount']}")
-            print(f"본문 길이: {len(result['Content'])} 글자")
-            print("\n본문 미리보기:")
-            print(result['Content'][:200] + "..." if len(result['Content']) > 200 else result['Content'])
-            print("="*50)
+    try:
+        # 각 URL 처리
+        for url in urls:
+            # 페이지 크롤링
+            page_source = crawler.crawl_blog(url)
+            if not page_source:
+                continue
             
-            # 결과를 리스트에 추가
+            # 데이터 파싱
+            parser = NaverBlogParser(crawler.driver, crawler.wait)
+            result = parser.parse_all()
+            result['URL'] = url
+            
+            # 결과 출력 및 저장
+            print_result(result)
             results.append(result)
-    
-    # 결과가 있으면 CSV 파일로 저장
-    if results:
-        # 현재 시간을 파일명에 포함
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f'blog_content_{timestamp}.csv'
-        
-        # DataFrame 생성 및 CSV 저장
-        df = pd.DataFrame(results)
-        
-        # 컬럼 순서 지정
-        columns = ['URL', 'Content', 'PublishDate', 'HashtagCount', 
-                  'ImageCount', 'StickerCount', 'CommentCount', 'LikeCount', 
-                  'MapCount']
-        
-        # 크롤링 시간 추가
-        df['Crawling_Time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         
         # CSV 파일로 저장
-        df[columns + ['Crawling_Time']].to_csv(filename, index=False, encoding='utf-8-sig')
-        print(f"\nCSV 파일이 생성되었습니다: {filename}")
+        if results:
+            filename = export_to_csv(results)
+            if filename:
+                print(f"\nCSV 파일이 생성되었습니다: {filename}")
+    
+    finally:
+        # 크롤러 종료
+        crawler.close()
 
 if __name__ == "__main__":
     main() 
