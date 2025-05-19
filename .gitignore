@@ -37,4 +37,5 @@ chromedriver.exe
 .env
 
 # Logs
-*.log 
+*.log
+*logs.txt 

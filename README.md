@@ -1,49 +1,77 @@
-# Naver Blog Crawler
+# 네이버 블로그 크롤러
 
-네이버 블로그 포스트 정보를 수집하는 크롤러입니다.
+네이버 블로그 API와 Selenium을 활용한 블로그 크롤링 도구입니다.
 
-## 기능
+## 주요 기능
 
-- 블로그 포스트 본문 추출
-- 해시태그 수 계산
-- 이미지 수 계산
-- 댓글 수 추출
-- 공감 수 추출
-- 스티커 수 계산
-- 지도 정보 수 계산
-- 결과를 CSV 파일로 저장
+- 네이버 검색 API를 통한 블로그 포스트 검색
+- Selenium을 활용한 블로그 내용 크롤링
+- 멀티프로세싱을 통한 병렬 크롤링
+- 진행률 표시 (tqdm)
+- 분리된 로깅 시스템 (프로그램 로그, 크롤링 로그)
 
-## 요구사항
+## 로깅 기능
 
-- Python 3.x
-- Chrome 브라우저
-- 필요한 Python 패키지:
-  - selenium
-  - beautifulsoup4
-  - pandas
-  - webdriver_manager
+프로그램은 다음과 같은 로그 정보를 `logs` 디렉토리에 저장합니다:
+
+- 프로그램 로그 파일: `yyyyMMdd_hhmm_program_logs.txt`
+- 크롤링 로그 파일: `yyyyMMdd_hhmm_crawler_logs.txt`
+
+### 로깅되는 정보
+
+1. 프로그램 로그
+   - 프로그램 시작/종료
+   - API 검색 결과
+   - 크롤링 프로세스 정보
+   - 결과 저장 정보
+
+2. 크롤링 로그
+   - 각 URL별 크롤링 시작/종료
+   - 크롤링 소요 시간
+   - 크롤링 성공/실패 여부
+   - 오류 발생 시 상세 정보
 
 ## 설치 방법
 
-1. 저장소 클론
-```bash
-git clone [your-repository-url]
-```
-
-2. 필요한 패키지 설치
+1. 필요한 패키지 설치:
 ```bash
 pip install -r requirements.txt
 ```
 
+2. Chrome 브라우저와 ChromeDriver 설치
+
 ## 사용 방법
 
-1. `main.py` 파일의 `urls` 리스트에 분석하고 싶은 네이버 블로그 포스트 URL을 추가합니다.
-2. 스크립트 실행:
+1. 네이버 개발자 센터에서 API 키 발급
+2. 프로그램 실행:
 ```bash
 python main.py
 ```
+3. API Client ID와 Client Secret 입력
+4. 크롤링 결과는 `results.csv` 파일로 저장
+5. 로그 파일은 `logs` 디렉토리에서 확인 가능
 
-## 출력 결과
+## 주의사항
 
-- 콘솔에 분석 결과가 출력됩니다.
-- 결과는 `blog_content_YYYYMMDD_HHMMSS.csv` 형식의 CSV 파일로 저장됩니다. 
+- 네이버 API 사용량 제한 확인 필요
+- 크롤링 시 적절한 딜레이 적용
+
+## 로그 파일 예시
+
+### 프로그램 로그
+```
+2024-01-20 10:30:15 - INFO - 프로그램 시작
+2024-01-20 10:30:15 - INFO - API 검색 시작: 키워드='맛집', display=8
+2024-01-20 10:30:16 - INFO - API 검색 성공: 8개 결과 (소요시간: 0.85초)
+2024-01-20 10:30:16 - INFO - 총 8개의 블로그 게시글을 찾았습니다.
+2024-01-20 10:30:16 - INFO - 4개의 프로세스로 크롤링을 시작합니다...
+2024-01-20 10:30:45 - INFO - 최종 결과가 저장되었습니다: results.csv (총 7개)
+2024-01-20 10:30:45 - INFO - 프로그램 종료
+```
+
+### 크롤링 로그
+```
+2024-01-20 10:30:16 - INFO - 크롤링 시작: https://blog.naver.com/example1
+2024-01-20 10:30:18 - INFO - 크롤링 성공: https://blog.naver.com/example1 (소요시간: 2.15초)
+2024-01-20 10:30:20 - ERROR - 크롤링 실패: https://blog.naver.com/example2 (소요시간: 1.85초) - 오류: TimeoutException
+```
